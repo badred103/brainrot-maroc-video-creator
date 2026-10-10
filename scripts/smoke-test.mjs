@@ -70,7 +70,7 @@ async function testKling() {
   if (!key) { log('\n[Kling] SKIPPED - KLING_API_KEY not set'); return; }
   configured++;
   const base = env.KLING_API_BASE || 'https://api.klingai.com';
-  const model = env.KLING_MODEL || 'kling-v1-6';
+  const model = env.KLING_MODEL || 'kling-v2-5-turbo';
   const duration = env.KLING_DURATION || '10';
   const maxPolls = Number(env.KLING_MAX_POLLS || 20);
   log(`\n[Kling] testing ${base} model=${model} duration=${duration}s key=${mask(key)}`);

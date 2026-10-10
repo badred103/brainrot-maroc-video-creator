@@ -24,7 +24,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.history = sd.history || [];\nconst stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);\nconst runId = 'brm-' + stamp + '-' + Math.random().toString(36).slice(2, 6);\nreturn [{ json: {\n  run_id: runId,\n  started_at: new Date().toISOString(),\n  gemini_base: $vars.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com',\n  gemini_model: $vars.GEMINI_MODEL || 'gemini-2.5-flash',\n  clip_count: Number($vars.CLIP_COUNT || 3),\n  kling_api_base: $vars.KLING_API_BASE || 'https://api.klingai.com',\n  kling_model: $vars.KLING_MODEL || 'kling-v1-6',\n  kling_mode: $vars.KLING_MODE || 'std',\n  kling_duration: String($vars.KLING_DURATION || '10'),\n  kling_max_polls: Number($vars.KLING_MAX_POLLS || 20),\n  post_mode: String($vars.POST_MODE || 'INBOX').toUpperCase(),\n  privacy_level: $vars.PRIVACY_LEVEL || 'SELF_ONLY',\n  merge_clips: String($vars.ENABLE_FFMPEG_MERGE || 'false').toLowerCase() === 'true',\n  ffmpeg_path: $vars.FFMPEG_PATH || 'ffmpeg',\n  output_dir: $vars.OUTPUT_DIR || '/tmp',\n  notify_url: $vars.NOTIFY_WEBHOOK_URL || '',\n  history: sd.history.slice(-40)\n} }];"
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.history = sd.history || [];\nconst stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);\nconst runId = 'brm-' + stamp + '-' + Math.random().toString(36).slice(2, 6);\nreturn [{ json: {\n  run_id: runId,\n  started_at: new Date().toISOString(),\n  gemini_base: $vars.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com',\n  gemini_model: $vars.GEMINI_MODEL || 'gemini-2.5-flash',\n  clip_count: Number($vars.CLIP_COUNT || 3),\n  kling_api_base: $vars.KLING_API_BASE || 'https://api.klingai.com',\n  kling_model: $vars.KLING_MODEL || 'kling-v2-5-turbo',\n  kling_mode: $vars.KLING_MODE || 'std',\n  kling_duration: String($vars.KLING_DURATION || '10'),\n  kling_max_polls: Number($vars.KLING_MAX_POLLS || 20),\n  post_mode: String($vars.POST_MODE || 'INBOX').toUpperCase(),\n  privacy_level: $vars.PRIVACY_LEVEL || 'SELF_ONLY',\n  merge_clips: String($vars.ENABLE_FFMPEG_MERGE || 'false').toLowerCase() === 'true',\n  ffmpeg_path: $vars.FFMPEG_PATH || 'ffmpeg',\n  output_dir: $vars.OUTPUT_DIR || '/tmp',\n  notify_url: $vars.NOTIFY_WEBHOOK_URL || '',\n  history: sd.history.slice(-40)\n} }];"
       },
       "id": "main-cfg-0001",
       "name": "Run Config",
@@ -205,7 +205,7 @@
         "source": "database",
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_KLING_WORKFLOW_ID",
+          "value": "bX3ht66hDslaK5QE",
           "mode": "id"
         },
         "options": {}
@@ -426,7 +426,7 @@
         "source": "database",
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_TIKTOK_WORKFLOW_ID",
+          "value": "IbRjP8htA3r0MmJT",
           "mode": "id"
         },
         "options": {}

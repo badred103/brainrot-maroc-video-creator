@@ -13,13 +13,44 @@ Tags: `[measured]` = produced by running something just now;
 | Workflow JSON parses | `node scripts/validate-workflows.mjs` | 3/3 parse, 0 failures `[measured]` |
 | Node graph integrity | same script: unique names, every connection target exists, no orphans, output-index bounds | 0 failures `[measured]` |
 | Real n8n import (their version) | `n8n import:workflow` against the user's installed n8n 2.42.6 with an isolated temp user folder | 3/3 "Successfully imported" `[measured]` |
+| Imported into the live instance | same CLI with `N8N_USER_FOLDER` pointing at `C:/Users/titan/.n8n`; DB queried before/after | 2 workflows before -> **5 after**, ids preserved, sub-workflow refs wired `[measured]` |
 | No secrets embedded | regex scan for `sk-`, `AIza`, `Bearer <long>`, private-key blocks, `client_secret=<long>` | 0 hits in all 3 files `[measured]` |
 | Concept rule gate | `node scripts/validate-concept.mjs` on `output/sample-concept.json` | PASS `[measured]` |
 | App icon 512x512 | `python scripts/make-app-icon.py` | PNG 512x512 RGBA, original artwork `[measured]` |
 | GitHub Pages reachable | HTTP GET on the three URLs | 200 OK `[measured]` |
 | Live Gemini call | `scripts/smoke-test.mjs` | **not run** - no API key `[not-tested]` |
-| Live Kling generation | `scripts/smoke-test.mjs` | **not run** - no API key `[not-tested]` |
+| **Live Kling generation** | `scripts/kling-real-test.mjs` against the real API | **key valid, generation blocked: account balance 0** `[measured]` |
 | Real TikTok upload | requires OAuth | **not run** - blocked `[not-tested]` |
+
+## Live Kling test, measured
+
+Ran with the key the user supplied (key never printed, only
+`api-************mEYM`).
+
+```
+kling-v2-5-turbo   http=429 code=1102 Account balance not enough
+kling-v2-1         http=400 code=1201 model is not supported
+kling-v2-master    http=404 code=1203 model discontinued
+kling-v1-5         http=404 code=1203 model discontinued
+kling-v1           http=404 code=1203 model discontinued
+kling-v3           http=429 code=1102 Account balance not enough
+```
+
+Facts established:
+
+- **The key authenticates.** A bad key returns `401 / Authorization prefix
+  should start with Bearer`. This key gets real business-logic responses, so
+  auth is fine. Auth prefix is `Bearer` - confirmed.
+- **`kling-v1-6`, `kling-v1-5`, `kling-v1`, `kling-v2-master` are discontinued
+  on this account.** The default in the workflow was `kling-v1-6`, which would
+  have failed on the first real run. **Changed the default to
+  `kling-v2-5-turbo`** in both workflows, `.env`, `.env.example` and the docs.
+- **`kling-v2-5-turbo` and `kling-v3` exist but return 1102 "Account balance
+  not enough".** The account has no generation credits.
+- **The API advertises duration `3..14` seconds**, not 5/10 as assumed. So a
+  20-35s target is reachable with 2-3 clips once credits exist.
+
+**No video was generated.** The blocker is billing, not configuration.
 
 ## Concept gate, measured
 

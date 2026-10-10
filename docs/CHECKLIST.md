@@ -53,6 +53,10 @@ See `docs/TIKTOK-APP.md` for the exact values.
 
 ## 6. TikTok OAuth + n8n connection - PARTIAL
 
+- [x] **All 3 workflows imported into the live instance** at `localhost:5678`
+      (n8n 2.42.6) with sub-workflow references pre-wired
+- [x] DB backed up before writing: `output/db-backup/`
+- [ ] Attach the `Gemini API Key` and `Kling API Auth` credentials
 - [x] OAuth start webhook (returns the TikTok authorise link)
 - [x] OAuth callback webhook (exchanges code, stores tokens)
 - [x] Refresh-token flow with automatic renewal before expiry
@@ -62,15 +66,18 @@ See `docs/TIKTOK-APP.md` for the exact values.
 - [ ] **You must do:** give n8n a public HTTPS URL for the callback
 - [ ] Activate workflow `03` and run the OAuth flow once
 
-## 7. Kling generation workflow test - PARTIAL
+## 7. Kling generation workflow test - PARTIAL (blocked on billing)
 
 - [x] Workflow `02` built: create task -> poll -> return URL, status, error
-- [x] 9:16 aspect ratio, duration configurable (5 or 10s)
+- [x] 9:16 aspect ratio, duration configurable (API allows 3-14s)
 - [x] Poll budget and timeout handled
-- [x] Imports cleanly into real n8n 2.35.7
-- [x] `scripts/smoke-test.mjs` ready for a live end-to-end Kling call
-- [ ] **You must do:** add your Kling API key (credential or `.env`), then run
-      the smoke test. Not executed here: no key available.
+- [x] Imports cleanly into your live n8n 2.42.6
+- [x] **Live API test run** - key authenticates, auth prefix `Bearer` confirmed
+- [x] **Default model corrected**: `kling-v1-6` is discontinued; now
+      `kling-v2-5-turbo` (in workflows, `.env`, `.env.example`, docs)
+- [ ] **You must do: top up your Kling credits.** `kling-v2-5-turbo` and
+      `kling-v3` both return `1102 Account balance not enough`, so no video has
+      been rendered yet.
 
 ## 8. TikTok upload / direct-post test - BLOCKED (needs OAuth)
 

@@ -19,7 +19,7 @@
             {
               "id": "cfg-1",
               "name": "model_name",
-              "value": "={{ $json.model_name || 'kling-v1-6' }}",
+              "value": "={{ $json.model_name || 'kling-v2-5-turbo' }}",
               "type": "string"
             },
             {

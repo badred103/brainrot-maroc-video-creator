@@ -13,7 +13,24 @@ clicking through the UI:
 
 Without it, follow steps 1-6 manually. Both work identically.
 
-## 1. Import the three workflows
+## 1. Import the three workflows - ALREADY DONE
+
+They are already in your instance. Refresh the n8n editor and you will see:
+
+| Workflow | n8n id |
+| --- | --- |
+| `BRM - Daily Brainrot Maroc (main)` | `0TcmOIkig7GWDFx5` |
+| `BRM - Kling Text-to-Video (sub)` | `bX3ht66hDslaK5QE` |
+| `BRM - TikTok OAuth + Upload (sub)` | `IbRjP8htA3r0MmJT` |
+
+The two sub-workflow calls inside `01` are already wired to those ids, so no
+clicking is needed there. All three are **inactive** on purpose - do not
+activate `01` until the credentials exist.
+
+A backup of your n8n database taken before the import is at
+`output/db-backup/`.
+
+If you ever need to redo it by hand:
 
 n8n -> **Workflows** -> **Import from File**, in this order:
 
@@ -72,7 +89,7 @@ Optional tuning (defaults are used if unset):
 | `PRIVACY_LEVEL` | `SELF_ONLY` | TikTok privacy level for direct post. |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | |
 | `CLIP_COUNT` | `3` | Clips generated per run. |
-| `KLING_MODEL` | `kling-v1-6` | Confirm the model name in your Kling console. |
+| `KLING_MODEL` | `kling-v2-5-turbo` | Confirm the model name in your Kling console. |
 | `KLING_MODE` | `std` | |
 | `KLING_DURATION` | `10` | `5` or `10`. |
 | `KLING_MAX_POLLS` | `20` | 20 polls x 45s ~= 15 min budget. |
