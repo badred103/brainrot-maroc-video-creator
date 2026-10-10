@@ -26,6 +26,8 @@ Public site (GitHub Pages): https://badred103.github.io/brainrot-maroc-video-cre
 | `docs/TEST-REPORT.md` | What was actually tested, and what was not. |
 | `scripts/` | Local validators and live API smoke tests. Keys are never printed, only masked. |
 | `output/sample-concept.json` | One original, safe sample concept used for the offline rule test. |
+| `assets/app-icon-512.png` | Original 512x512 app icon for the TikTok app submission. |
+| `scripts/make-app-icon.py` | Generator for the app icon (reproducible, no AI credits). |
 
 ## How a daily run works
 

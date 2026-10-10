@@ -31,7 +31,8 @@ phone. This document is the exact sequence.
      > for upload.
 
    - **Platform**: Web
-   - **App icon**: 512x512 PNG, no TikTok logo, no copyrighted art.
+   - **App icon**: upload `assets/app-icon-512.png` from this repository
+     (512x512 PNG, original artwork, no TikTok logo, no copyrighted art).
 3. Save.
 
 ## Step 3 - Products

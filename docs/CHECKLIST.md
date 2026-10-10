@@ -13,6 +13,7 @@ Nothing I can do without your TikTok login and verification.
 ## 2. TikTok App + Content Posting API - BLOCKED (needs your login)
 
 - [ ] App created: name, category, description, platform Web, 512x512 icon
+- [x] **App icon prepared**: `assets/app-icon-512.png` (original artwork, no copyright)
 - [ ] Login Kit enabled
 - [ ] Content Posting API enabled
 - [ ] Scope `video.upload` requested

@@ -12,10 +12,11 @@ Tags: `[measured]` = produced by running something just now;
 | --- | --- | --- |
 | Workflow JSON parses | `node scripts/validate-workflows.mjs` | 3/3 parse, 0 failures `[measured]` |
 | Node graph integrity | same script: unique names, every connection target exists, no orphans, output-index bounds | 0 failures `[measured]` |
-| Real n8n import | `n8n import:workflow --input=<file>` on n8n 2.35.7 | 3/3 "Successfully imported 1 workflow" `[measured]` |
+| Real n8n import (their version) | `n8n import:workflow` against the user's installed n8n 2.42.6 with an isolated temp user folder | 3/3 "Successfully imported" `[measured]` |
 | No secrets embedded | regex scan for `sk-`, `AIza`, `Bearer <long>`, private-key blocks, `client_secret=<long>` | 0 hits in all 3 files `[measured]` |
 | Concept rule gate | `node scripts/validate-concept.mjs` on `output/sample-concept.json` | PASS `[measured]` |
-| GitHub Pages reachable | HTTP GET on the three URLs | see below |
+| App icon 512x512 | `python scripts/make-app-icon.py` | PNG 512x512 RGBA, original artwork `[measured]` |
+| GitHub Pages reachable | HTTP GET on the three URLs | 200 OK `[measured]` |
 | Live Gemini call | `scripts/smoke-test.mjs` | **not run** - no API key `[not-tested]` |
 | Live Kling generation | `scripts/smoke-test.mjs` | **not run** - no API key `[not-tested]` |
 | Real TikTok upload | requires OAuth | **not run** - blocked `[not-tested]` |
