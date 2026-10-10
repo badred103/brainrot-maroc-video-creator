@@ -1,0 +1,379 @@
+{
+  "name": "BRM - Daily Brainrot Maroc (main)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "30 20 * * *" }
+          ]
+        }
+      },
+      "id": "main-sched-0001",
+      "name": "Every Day 20:30 Casablanca",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1020, 320]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.history = sd.history || [];\nconst stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);\nconst runId = 'brm-' + stamp + '-' + Math.random().toString(36).slice(2, 6);\nreturn [{ json: {\n  run_id: runId,\n  started_at: new Date().toISOString(),\n  gemini_base: $vars.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com',\n  gemini_model: $vars.GEMINI_MODEL || 'gemini-2.5-flash',\n  clip_count: Number($vars.CLIP_COUNT || 3),\n  kling_api_base: $vars.KLING_API_BASE || 'https://api.klingai.com',\n  kling_model: $vars.KLING_MODEL || 'kling-v1-6',\n  kling_mode: $vars.KLING_MODE || 'std',\n  kling_duration: String($vars.KLING_DURATION || '10'),\n  kling_max_polls: Number($vars.KLING_MAX_POLLS || 20),\n  post_mode: String($vars.POST_MODE || 'INBOX').toUpperCase(),\n  privacy_level: $vars.PRIVACY_LEVEL || 'SELF_ONLY',\n  merge_clips: String($vars.ENABLE_FFMPEG_MERGE || 'false').toLowerCase() === 'true',\n  ffmpeg_path: $vars.FFMPEG_PATH || 'ffmpeg',\n  output_dir: $vars.OUTPUT_DIR || '/tmp',\n  notify_url: $vars.NOTIFY_WEBHOOK_URL || '',\n  history: sd.history.slice(-40)\n} }];"
+      },
+      "id": "main-cfg-0001",
+      "name": "Run Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-800, 320]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const c = $input.first().json;\nconst sys = [\n'You are the creative engine of \"Brainrot Maroc\", a TikTok channel that publishes exactly ONE ORIGINAL vertical comedy short per day in Moroccan Darija.',\n'',\n'HARD OUTPUT RULES:',\n'- Reply with JSON only, matching the supplied schema. No markdown fences.',\n'- kling_prompt: one English visual prompt for a camera-realistic 9:16 vertical shot. Describe ONE continuous scene: subject, wardrobe, location, action, camera movement, lighting, mood. Never put text, logos, watermarks, or subtitles on screen. Never use real or fictional copyrighted characters, brand names, or any real-person likeness.',\n'- clip_prompts: exactly ' + c.clip_count + ' prompts. They are ONE continuous scene cut into beats: clip 1 is the hook (first second), the middle clips escalate, the last clip is the punchline. Keep identical characters, wardrobe, location and lighting across every clip.',\n'- voiceover_darija: ORIGINAL Moroccan Darija script, maximum 75 words, written in Latin characters (Arabizi) with everyday Darija and French slang. It must be a joke or a reaction, never a plain description of the image. No hate speech, no slurs, no insults against any group or region, no politics, no religion, no sexual content, no violence, no self-harm, no drugs or alcohol, no dangerous stunts.',\n'- caption: maximum 120 characters, punchy, honest, no fake promises, no hashtags inside it.',\n'- hashtags: 3 to 5 items. MUST include #Morocco, #Maroc and #TikTokMaroc. At most 2 extra relevant tags. No spammy or banned tags.',\n'- safety: you must self-check. Set passed=false if the concept touches ANY of: hate speech or slurs, sexual content, minors in a risky or sexualised context, violence or gore, dangerous stunts or self-harm, drugs or alcohol, politics, religion, impersonation of a real person, copyrighted characters or music, medical or financial claims, or fear-mongering.',\n'',\n'STYLE:',\n'- Everyday Morocco: cafe and hanout, grand taxi and tram, football culture, family and neighbours, street food, school and bureau, weddings, rain and traffic, power cuts, exam season, Ramadan evenings, beach days.',\n'- Absurd escalation, fast cuts, a hook that lands in under one second, a clear punchline at the end.',\n'- Fictional generic characters only. Punch up at situations, never down at people, regions, or communities.',\n'',\n'ORIGINALITY:',\n'- Never copy or imitate another creator, trend audio, or existing meme format.',\n'- Do not reuse any of these recent concepts: ' + JSON.stringify(c.history)\n].join('\\n');\nconst user = 'Produce one fresh, safe, original Brainrot Maroc concept for ' + new Date().toISOString().slice(0, 10) + '. Make the hook land in under one second.';\nconst schema = {\n  type: 'OBJECT',\n  properties: {\n    concept_title: { type: 'STRING' },\n    setting: { type: 'STRING' },\n    hook: { type: 'STRING' },\n    kling_prompt: { type: 'STRING' },\n    clip_prompts: { type: 'ARRAY', items: { type: 'STRING' } },\n    negative_prompt: { type: 'STRING' },\n    voiceover_darija: { type: 'STRING' },\n    caption: { type: 'STRING' },\n    hashtags: { type: 'ARRAY', items: { type: 'STRING' } },\n    safety: { type: 'OBJECT', properties: { passed: { type: 'BOOLEAN' }, flags: { type: 'ARRAY', items: { type: 'STRING' } }, notes: { type: 'STRING' } } },\n    retention_note: { type: 'STRING' }\n  },\n  required: ['concept_title', 'setting', 'hook', 'kling_prompt', 'clip_prompts', 'negative_prompt', 'voiceover_darija', 'caption', 'hashtags', 'safety', 'retention_note']\n};\nconst body = {\n  systemInstruction: { parts: [{ text: sys }] },\n  contents: [{ role: 'user', parts: [{ text: user }] }],\n  generationConfig: { responseMimeType: 'application/json', responseSchema: schema, temperature: 1.0, topP: 0.95 },\n  safetySettings: [\n    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },\n    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },\n    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },\n    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }\n  ]\n};\nreturn [{ json: { requestBody: body, cfg: c } }];"
+      },
+      "id": "main-gemreq-0001",
+      "name": "Build Gemini Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-580, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.cfg.gemini_base }}/v1beta/models/{{ $json.cfg.gemini_model }}:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.requestBody) }}",
+        "options": {
+          "timeout": 120000,
+          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+        }
+      },
+      "id": "main-gemini-0001",
+      "name": "Gemini Generate Concept",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-360, 320],
+      "authentication": "genericCredentialType",
+      "genericAuthType": "httpHeaderAuth",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_GEMINI_CREDENTIAL_ID",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cfg = $('Run Config').first().json;\nconst resp = $input.first().json;\nconst issues = [];\nif (resp.error) issues.push('Gemini API error: ' + JSON.stringify(resp.error).slice(0, 300));\nconst cand = (resp.candidates && resp.candidates[0]) || {};\nconst parts = (cand.content && cand.content.parts) || [];\nconst text = parts.map(p => p.text || '').join('');\nlet o = null;\ntry {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  o = JSON.parse(m ? m[0] : text);\n} catch (e) {\n  return [{ json: { ok: false, issues: ['Gemini reply is not valid JSON. Raw head: ' + text.slice(0, 300)], cfg: cfg } }];\n}\nconst req = ['concept_title', 'setting', 'hook', 'kling_prompt', 'clip_prompts', 'voiceover_darija', 'caption', 'hashtags', 'safety'];\nfor (const k of req) { if (o[k] === undefined || o[k] === null || o[k] === '') issues.push('Missing field: ' + k); }\nconst vo = String(o.voiceover_darija || '');\nconst voWords = vo.trim().split(/\\s+/).filter(Boolean).length;\nif (voWords > 75) issues.push('Voiceover too long: ' + voWords + ' words (max 75).');\nif (voWords < 5) issues.push('Voiceover too short: ' + voWords + ' words.');\nconst cap = String(o.caption || '');\nif (cap.length > 120) issues.push('Caption too long: ' + cap.length + ' chars (max 120).');\nif (cap.length < 10) issues.push('Caption too short.');\nlet tags = (Array.isArray(o.hashtags) ? o.hashtags : []).map(t => String(t).trim()).filter(Boolean).map(t => (t.startsWith('#') ? t : '#' + t));\ntags = Array.from(new Set(tags));\nif (tags.length < 3 || tags.length > 5) issues.push('Hashtag count invalid: ' + tags.length + ' (need 3 to 5).');\nconst need = ['#morocco', '#maroc', '#tiktokmaroc'];\nfor (const n of need) { if (!tags.some(t => t.toLowerCase() === n)) issues.push('Missing required hashtag: ' + n); }\nconst banned = /\\b(kill|suicide|rape|nude|porn|sexual|isis|jihad|cocaine|heroin|weed|hashish|zamel|sahbi\\s+khwa)\\b/i;\nconst blob = [o.kling_prompt, vo, cap, tags.join(' '), (o.concept_title || '')].join(' ');\nif (banned.test(blob)) issues.push('Banned term matched in generated content.');\nconst sf = o.safety || {};\nif (sf.passed !== true) issues.push('Model safety check failed. Flags: ' + JSON.stringify(sf.flags || []) + ' Notes: ' + (sf.notes || ''));\nlet clips = (Array.isArray(o.clip_prompts) && o.clip_prompts.length) ? o.clip_prompts.map(String) : [String(o.kling_prompt || '')];\nif (clips.length < cfg.clip_count) {\n  const last = clips[clips.length - 1];\n  while (clips.length < cfg.clip_count) clips.push(last);\n}\nclips = clips.slice(0, cfg.clip_count);\nconst concept = {\n  run_id: cfg.run_id,\n  concept_title: o.concept_title,\n  setting: o.setting,\n  hook: o.hook,\n  kling_prompt: o.kling_prompt,\n  clip_prompts: clips,\n  negative_prompt: o.negative_prompt || 'text, watermark, logo, subtitles, copyrighted character, brand name, violence, sexual content, gore, dangerous stunt, real person likeness',\n  voiceover_darija: vo,\n  voiceover_words: voWords,\n  caption: cap,\n  caption_chars: cap.length,\n  hashtags: tags,\n  safety: sf,\n  retention_note: o.retention_note || ''\n};\nreturn [{ json: { ok: issues.length === 0, issues: issues, concept: concept, cfg: cfg } }];"
+      },
+      "id": "main-parse-0001",
+      "name": "Parse And Validate Concept",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-140, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "main-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "main-if-ok-0001",
+      "name": "Concept OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [80, 320]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $input.first().json;\nconst url = j.cfg.notify_url || '';\nconst payload = { event: 'concept_rejected', run_id: j.cfg.run_id, issues: j.issues, at: new Date().toISOString() };\nlet sent = false;\nif (url) {\n  try {\n    const r = await this.helpers.httpRequest({ method: 'POST', url: url, body: payload, json: true, timeout: 20000 });\n    sent = true;\n  } catch (e) { sent = false; }\n}\nreturn [{ json: Object.assign({}, payload, { notified: sent }) }];"
+      },
+      "id": "main-notify-fail-0001",
+      "name": "Notify Concept Rejected",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 520]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Concept rejected: ' + $json.issues.join(' | ') }}"
+      },
+      "id": "main-stop-0001",
+      "name": "Stop - Concept Rejected",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [540, 520]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst j = $input.first().json;\nsd.history = sd.history || [];\nsd.history.push(j.concept.concept_title + ' :: ' + j.concept.setting);\nsd.history = sd.history.slice(-40);\nreturn [{ json: j }];"
+      },
+      "id": "main-log-0001",
+      "name": "Remember Concept",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $input.first().json;\nconst c = j.cfg;\nreturn [{ json: {\n  run_id: c.run_id,\n  clip_prompts: j.concept.clip_prompts,\n  negative_prompt: j.concept.negative_prompt,\n  model_name: c.kling_model,\n  mode: c.kling_mode,\n  duration: c.kling_duration,\n  aspect_ratio: '9:16',\n  cfg_scale: 0.5,\n  api_base: c.kling_api_base,\n  max_polls: c.kling_max_polls,\n  concept: j.concept\n} }];"
+      },
+      "id": "main-klingin-0001",
+      "name": "Prepare Kling Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 200]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_KLING_WORKFLOW_ID", "mode": "id" },
+        "options": {}
+      },
+      "id": "main-kling-0001",
+      "name": "Run Kling Text-To-Video",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "main-vidok",
+              "leftValue": "={{ $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "main-if-vid-0001",
+      "name": "Video Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [980, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst j = $input.first().json;\nconst url = (j.notify_url || $('Run Config').first().json.notify_url || '');\nconst payload = { event: 'video_generation_failed', run_id: $('Run Config').first().json.run_id, status: j.status, error: j.error, clips: j.clips, at: new Date().toISOString() };\nlet sent = false;\nif (url) { try { await this.helpers.httpRequest({ method: 'POST', url: url, body: payload, json: true, timeout: 20000 }); sent = true; } catch (e) { sent = false; } }\nreturn [{ json: Object.assign({}, payload, { notified: sent }) }];"
+      },
+      "id": "main-notify-vidfail-0001",
+      "name": "Notify Video Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 420]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Kling generation failed: ' + ($json.error || $json.status) }}"
+      },
+      "id": "main-stop-vid-0001",
+      "name": "Stop - Video Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [1420, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "main-merge",
+              "leftValue": "={{ $('Run Config').first().json.merge_clips }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "main-if-merge-0001",
+      "name": "Merge Clips Locally?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1200, 120]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cfg = $('Run Config').first().json;\nconst j = $input.first().json;\nconst urls = j.video_urls || [];\nconst inputs = urls.map(u => '-i \"' + u + '\"').join(' ');\nconst maps = urls.map((u, i) => '[' + i + ':v]').join('');\nconst out = cfg.output_dir.replace(/[\\\\/]+$/, '') + '/' + cfg.run_id + '.mp4';\nconst cmd = cfg.ffmpeg_path + ' -y ' + inputs + ' -filter_complex \"' + maps + 'concat=n=' + urls.length + ':v=1:a=0[v]\" -map \"[v]\" -c:v libx264 -pix_fmt yuv420p -r 30 -vf scale=1080:1920 \"' + out + '\"';\nreturn [{ json: Object.assign({}, j, { ffmpeg_command: cmd, merged_path: out, merged_clips: urls.length }) }];"
+      },
+      "id": "main-ffbuild-0001",
+      "name": "Build FFmpeg Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 60]
+    },
+    {
+      "parameters": {
+        "command": "={{ $json.ffmpeg_command }}"
+      },
+      "id": "main-ffmpeg-0001",
+      "name": "FFmpeg Concat",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1640, 60]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cfg = $('Run Config').first().json;\nconst concept = $('Prepare Kling Input').first().json.concept;\nconst v = $input.first().json;\nconst merged = v.merged_path || null;\nconst useLocal = !!(merged && cfg.merge_clips);\nreturn [{ json: {\n  run_id: cfg.run_id,\n  video_url: useLocal ? null : v.video_url,\n  local_video_path: useLocal ? merged : null,\n  merged: useLocal,\n  caption: concept.caption,\n  hashtags: concept.hashtags.join(' '),\n  post_mode: cfg.post_mode,\n  privacy_level: cfg.privacy_level,\n  cover_timestamp_ms: 1000,\n  concept: concept,\n  kling: { status: v.status, video_urls: v.video_urls, clip_count: v.clip_count, approx_total_seconds: v.approx_total_seconds, error: v.error }\n} }];"
+      },
+      "id": "main-ttinput-0001",
+      "name": "Build TikTok Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "main-mode",
+              "leftValue": "={{ $json.post_mode }}",
+              "rightValue": "INBOX",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "main-if-mode-0001",
+      "name": "Draft Or Direct Post?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2080, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $input.first().json;\nconst url = $('Run Config').first().json.notify_url || '';\nconst payload = { event: 'approval_required', run_id: j.run_id, caption: j.caption, hashtags: j.hashtags, video_url: j.video_url, privacy_level: j.privacy_level, approve_url: $execution.resumeUrl, question: 'Publish this video to TikTok publicly? Call approve_url to confirm.', at: new Date().toISOString() };\nlet sent = false;\nif (url) { try { await this.helpers.httpRequest({ method: 'POST', url: url, body: payload, json: true, timeout: 20000 }); sent = true; } catch (e) { sent = false; } }\nreturn [{ json: Object.assign({}, j, { approval_requested: true, notified: sent, approve_url: $execution.resumeUrl }) }];"
+      },
+      "id": "main-ask-0001",
+      "name": "Ask Human Confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 360]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "webhookSuffix": "approve",
+          "limitWaitTime": true,
+          "resumeAmount": 1440,
+          "resumeUnit": "minutes"
+        }
+      },
+      "id": "main-wait-0001",
+      "name": "Wait For Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2520, 360],
+      "webhookId": "brm-approve-post"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": { "__rl": true, "value": "REPLACE_WITH_TIKTOK_WORKFLOW_ID", "mode": "id" },
+        "options": {}
+      },
+      "id": "main-tt-0001",
+      "name": "Upload To TikTok",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [2760, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cfg = $('Run Config').first().json;\nconst tt = $input.first().json;\nconst pay = $('Build TikTok Payload').first().json;\nconst kling = $('Build TikTok Payload').first().json.kling;\nconst report = {\n  run_id: cfg.run_id,\n  finished_at: new Date().toISOString(),\n  concept: { title: pay.concept.concept_title, setting: pay.concept.setting, hook: pay.concept.hook, caption: pay.concept.caption, caption_chars: pay.concept.caption_chars, hashtags: pay.concept.hashtags, voiceover_words: pay.concept.voiceover_words, voiceover: pay.concept.voiceover_darija, safety: pay.concept.safety },\n  video: { status: kling.status, clip_count: kling.clip_count, approx_total_seconds: kling.approx_total_seconds, urls: kling.video_urls, error: kling.error },\n  publish: { status: tt.status, visibility: tt.visibility, post_mode: tt.post_mode, publish_id: tt.publish_id, tiktok_status: tt.tiktok_status, error: tt.error, note: tt.note },\n  merged_local_file: pay.local_video_path\n};\nconst url = cfg.notify_url || '';\nlet sent = false;\nif (url) { try { await this.helpers.httpRequest({ method: 'POST', url: url, body: { event: 'run_complete', report: report }, json: true, timeout: 20000 }); sent = true; } catch (e) { sent = false; } }\nconst md = [\n'# Brainrot Maroc run ' + cfg.run_id,\n'',\n'Concept: ' + report.concept.title + ' (' + report.concept.setting + ')',\n'Hook: ' + report.concept.hook,\n'Caption (' + report.concept.caption_chars + ' chars): ' + report.concept.caption,\n'Tags: ' + report.concept.hashtags.join(' '),\n'Voiceover (' + report.concept.voiceover_words + ' words): ' + report.concept.voiceover,\n'',\n'Video: ' + report.video.status + ' | clips: ' + report.video.clip_count + ' | ~' + report.video.approx_total_seconds + 's',\n'Errors: ' + (report.video.error || 'none'),\n'',\n'Publish: ' + report.publish.status + ' | visibility: ' + report.publish.visibility + ' | mode: ' + report.publish.post_mode,\nreport.publish.note || ''\n].join('\\n');\nreturn [{ json: { report: report, report_markdown: md, notified: sent } }];"
+      },
+      "id": "main-report-0001",
+      "name": "Build Run Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2980, 200]
+    }
+  ],
+  "connections": {
+    "Every Day 20:30 Casablanca": { "main": [[{ "node": "Run Config", "type": "main", "index": 0 }]] },
+    "Run Config": { "main": [[{ "node": "Build Gemini Request", "type": "main", "index": 0 }]] },
+    "Build Gemini Request": { "main": [[{ "node": "Gemini Generate Concept", "type": "main", "index": 0 }]] },
+    "Gemini Generate Concept": { "main": [[{ "node": "Parse And Validate Concept", "type": "main", "index": 0 }]] },
+    "Parse And Validate Concept": { "main": [[{ "node": "Concept OK?", "type": "main", "index": 0 }]] },
+    "Concept OK?": {
+      "main": [
+        [{ "node": "Remember Concept", "type": "main", "index": 0 }],
+        [{ "node": "Notify Concept Rejected", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Concept Rejected": { "main": [[{ "node": "Stop - Concept Rejected", "type": "main", "index": 0 }]] },
+    "Remember Concept": { "main": [[{ "node": "Prepare Kling Input", "type": "main", "index": 0 }]] },
+    "Prepare Kling Input": { "main": [[{ "node": "Run Kling Text-To-Video", "type": "main", "index": 0 }]] },
+    "Run Kling Text-To-Video": { "main": [[{ "node": "Video Ready?", "type": "main", "index": 0 }]] },
+    "Video Ready?": {
+      "main": [
+        [{ "node": "Merge Clips Locally?", "type": "main", "index": 0 }],
+        [{ "node": "Notify Video Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Video Failed": { "main": [[{ "node": "Stop - Video Failed", "type": "main", "index": 0 }]] },
+    "Merge Clips Locally?": {
+      "main": [
+        [{ "node": "Build FFmpeg Command", "type": "main", "index": 0 }],
+        [{ "node": "Build TikTok Payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build FFmpeg Command": { "main": [[{ "node": "FFmpeg Concat", "type": "main", "index": 0 }]] },
+    "FFmpeg Concat": { "main": [[{ "node": "Build TikTok Payload", "type": "main", "index": 0 }]] },
+    "Build TikTok Payload": { "main": [[{ "node": "Draft Or Direct Post?", "type": "main", "index": 0 }]] },
+    "Draft Or Direct Post?": {
+      "main": [
+        [{ "node": "Upload To TikTok", "type": "main", "index": 0 }],
+        [{ "node": "Ask Human Confirmation", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ask Human Confirmation": { "main": [[{ "node": "Wait For Approval", "type": "main", "index": 0 }]] },
+    "Wait For Approval": { "main": [[{ "node": "Upload To TikTok", "type": "main", "index": 0 }]] },
+    "Upload To TikTok": { "main": [[{ "node": "Build Run Report", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Africa/Casablanca", "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all" },
+  "staticData": null,
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "brainrot-maroc" }]
+}

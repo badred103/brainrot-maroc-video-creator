@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy &mdash; Brainrot Maroc Video Creator</title>
+<meta name="description" content="Privacy Policy for Brainrot Maroc Video Creator.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="site">
+  <div class="brand">Brainrot Maroc Video Creator</div>
+  <nav>
+    <a href="index.html">Overview</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+  </nav>
+</header>
+
+<h1>Privacy Policy</h1>
+<p class="lede">Last updated: 10 October 2026</p>
+
+<p>Brainrot Maroc Video Creator (&ldquo;the Tool&rdquo;) is an automation workflow that helps a creator produce and deliver short-form video content to their own TikTok account. This policy explains what data the Tool processes, who else receives it, and what it does not do.</p>
+
+<h2>1. Who this covers</h2>
+<p>The Tool is operated by the individual or business that installed it (&ldquo;the Operator&rdquo;) for use on their own TikTok account. This policy describes the Tool&rsquo;s default behaviour.</p>
+
+<h2>2. Data the Tool processes</h2>
+<ul>
+  <li><strong>Generated content:</strong> text prompts, video scenes, voiceover scripts, captions and hashtags created by the AI model.</li>
+  <li><strong>Rendered media:</strong> the generated video files and their temporary URLs.</li>
+  <li><strong>Publishing metadata:</strong> video title, caption, hashtags, privacy setting and the resulting publish identifier.</li>
+  <li><strong>Authorisation data:</strong> a TikTok OAuth access token and refresh token limited to the scopes you approved, plus the TikTok open ID.</li>
+  <li><strong>Run logs:</strong> a local record of each run (timestamp, concept title, statuses, errors) used to avoid repeating concepts and to debug failures.</li>
+</ul>
+
+<h2>3. Data the Tool does not collect</h2>
+<ul>
+  <li>No TikTok password. Authorisation uses TikTok&rsquo;s official OAuth flow only.</li>
+  <li>No browser analytics, advertising identifiers, or tracking cookies on this website.</li>
+  <li>No personal data of viewers, followers or third parties. The Tool does not read, store or analyse TikTok audience data.</li>
+  <li>No payment or financial data.</li>
+</ul>
+
+<h2>4. Third parties that receive data</h2>
+<p>The Tool sends data only to services required to perform its function:</p>
+<ul>
+  <li><strong>Google (Gemini API)</strong> &mdash; receives text prompts and returns generated text.</li>
+  <li><strong>Kling AI (video generation API)</strong> &mdash; receives the visual prompt and returns video files.</li>
+  <li><strong>TikTok (Content Posting API)</strong> &mdash; receives the finished video and its caption, and returns publish status.</li>
+</ul>
+<p>Each of these providers processes data under its own terms and privacy policy.</p>
+
+<h2>5. Where data is stored</h2>
+<p>Authorisation tokens, run logs and generated media are stored in the Operator&rsquo;s own automation instance (a self-hosted or privately operated n8n server, plus the Operator&rsquo;s own storage). They are not published, shared, or made available to other people.</p>
+
+<h2>6. Retention</h2>
+<p>Run logs are kept to prevent concept repetition and are trimmed on a rolling basis. Generated videos are kept only as long as needed to publish or review them. Tokens are retained only while the Tool is connected and are deleted when access is revoked or the installation is removed.</p>
+
+<h2>7. Your choices</h2>
+<ul>
+  <li>You can revoke TikTok access at any time from your TikTok account settings; the Tool then stops being able to post.</li>
+  <li>You can delete run logs and generated media from the Operator&rsquo;s server at any time.</li>
+  <li>You can stop the daily schedule entirely.</li>
+</ul>
+
+<h2>8. Children</h2>
+<p>The Tool is intended for adult creators operating their own accounts. It is not directed at children and does not knowingly collect data from children.</p>
+
+<h2>9. Security</h2>
+<p>API keys and tokens are stored in the automation server&rsquo;s credential store. They are never written into this website, into source files, or into logs that are shared publicly.</p>
+
+<h2>10. Contact</h2>
+<p>Questions about this policy: <a href="mailto:REPLACE_WITH_CONTACT_EMAIL">REPLACE_WITH_CONTACT_EMAIL</a></p>
+
+<footer class="site">
+  <a href="index.html">Overview</a> &middot; <a href="terms.html">Terms of Service</a>
+</footer>
+
+</div>
+</body>
+</html>

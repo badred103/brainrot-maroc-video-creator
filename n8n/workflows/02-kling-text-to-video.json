@@ -1,0 +1,259 @@
+{
+  "name": "BRM - Kling Text-to-Video (sub)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "kling-in-0001",
+      "name": "When Called By Main Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-860, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "cfg-1", "name": "model_name", "value": "={{ $json.model_name || 'kling-v1-6' }}", "type": "string" },
+            { "id": "cfg-2", "name": "mode", "value": "={{ $json.mode || 'std' }}", "type": "string" },
+            { "id": "cfg-3", "name": "duration", "value": "={{ String($json.duration || '10') }}", "type": "string" },
+            { "id": "cfg-4", "name": "aspect_ratio", "value": "={{ $json.aspect_ratio || '9:16' }}", "type": "string" },
+            { "id": "cfg-5", "name": "cfg_scale", "value": "={{ Number($json.cfg_scale ?? 0.5) }}", "type": "number" },
+            { "id": "cfg-6", "name": "api_base", "value": "={{ $json.api_base || 'https://api.klingai.com' }}", "type": "string" },
+            { "id": "cfg-7", "name": "max_polls", "value": "={{ Number($json.max_polls || 20) }}", "type": "number" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "kling-cfg-0001",
+      "name": "Kling Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-640, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst inp = $input.first().json;\nconst cfg = $('Kling Config').first().json;\nconst raw = inp.clip_prompts;\nconst prompts = Array.isArray(raw) ? raw : String(raw || '').split('\\n---\\n').map(s => s.trim()).filter(Boolean);\nconst list = prompts.length ? prompts : [inp.prompt || '']; \nconst runId = inp.run_id || ('brm-' + Date.now());\nsd.results = [];\nsd.polls = 0;\nsd.maxPolls = Number(cfg.max_polls || 20);\nsd.startedAt = new Date().toISOString();\nreturn list.map((p, i) => ({ json: {\n  run_id: runId,\n  clip_index: i + 1,\n  clip_count: list.length,\n  prompt: String(p).slice(0, 2500),\n  negative_prompt: inp.negative_prompt || 'text, watermark, logo, subtitles, copyrighted character, brand name, violence, sexual content, gore, minors in risky situations, dangerous stunt, real person likeness',\n  model_name: cfg.model_name,\n  mode: cfg.mode,\n  duration: cfg.duration,\n  aspect_ratio: cfg.aspect_ratio,\n  cfg_scale: cfg.cfg_scale,\n  api_base: cfg.api_base,\n  external_task_id: (runId + '-c' + (i + 1)).slice(0, 64)\n} }));"
+      },
+      "id": "kling-build-0001",
+      "name": "Build Clip Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.api_base }}/v1/videos/text2video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model_name: $json.model_name, prompt: $json.prompt, negative_prompt: $json.negative_prompt, mode: $json.mode, duration: $json.duration, aspect_ratio: $json.aspect_ratio, cfg_scale: $json.cfg_scale, external_task_id: $json.external_task_id }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "kling-create-0001",
+      "name": "Create Kling Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-200, 300],
+      "authentication": "genericCredentialType",
+      "genericAuthType": "httpHeaderAuth",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_KLING_CREDENTIAL_ID",
+          "name": "Kling API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "position",
+        "options": {}
+      },
+      "id": "kling-mergec-0001",
+      "name": "Merge Create Request+Response",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [20, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nreturn $input.all().map(it => {\n  const req = it.json;\n  const resp = it.json.data || {};\n  const body = (typeof it.json.body !== 'undefined') ? it.json.body : req;\n  const ok = (it.json.code === 0 || it.json.code === '0') || (body && body.code === 0);\n  const taskId = (body && body.data && body.data.task_id) || (resp.task_id) || null;\n  return { json: {\n    run_id: req.run_id,\n    clip_index: req.clip_index,\n    clip_count: req.clip_count,\n    api_base: req.api_base,\n    external_task_id: req.external_task_id,\n    task_id: taskId,\n    kling_status: ok && taskId ? 'processing' : 'failed',\n    terminal: !taskId,\n    video_url: null,\n    error: taskId ? null : ('Kling create failed: ' + JSON.stringify(it.json).slice(0, 400))\n  } };\n});"
+      },
+      "id": "kling-normc-0001",
+      "name": "Normalize Create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "amount": 45,
+        "unit": "seconds"
+      },
+      "id": "kling-wait-0001",
+      "name": "Wait Before Poll",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [460, 300],
+      "webhookId": "brm-kling-wait"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.api_base }}/v1/videos/text2video/{{ $json.task_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "kling-query-0001",
+      "name": "Query Kling Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "authentication": "genericCredentialType",
+      "genericAuthType": "httpHeaderAuth",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_KLING_CREDENTIAL_ID",
+          "name": "Kling API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "position",
+        "options": {}
+      },
+      "id": "kling-mergeq-0001",
+      "name": "Merge Query Request+Response",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.polls = (sd.polls || 0) + 1;\nconst out = $input.all().map(it => {\n  const j = it.json;\n  const prev = j;\n  const d = (j.data || (j.body && j.body.data) || {});\n  const ts = d.task_status || prev.kling_status || 'processing';\n  let url = null;\n  if (d.task_result && d.task_result.videos && d.task_result.videos.length) { url = d.task_result.videos[0].url || null; }\n  const done = (ts === 'succeed' || ts === 'succeeded' || ts === 'failed' || ts === 'FAILED');\n  const okStatus = (ts === 'succeed' || ts === 'succeeded');\n  return { json: {\n    run_id: prev.run_id, clip_index: prev.clip_index, clip_count: prev.clip_count,\n    api_base: prev.api_base, task_id: prev.task_id, external_task_id: prev.external_task_id,\n    kling_status: ts,\n    terminal: done,\n    video_url: url,\n    error: done && !okStatus ? ('Kling task failed: ' + (d.task_status_msg || ts)) : null\n  } };\n});\nsd.results = out.map(o => o.json);\nreturn out;"
+      },
+      "id": "kling-norms-0001",
+      "name": "Normalize Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst res = sd.results || [];\nconst timedOut = (sd.polls || 0) >= (sd.maxPolls || 20);\nconst allTerminal = res.length > 0 && res.every(r => r.terminal) ;\nconst done = allTerminal || timedOut;\nreturn res.map(r => ({ json: Object.assign({}, r, { all_terminal: done, timed_out: timedOut && !allTerminal, polls: sd.polls }) }));"
+      },
+      "id": "kling-check-0001",
+      "name": "Check All Terminal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "if-all-terminal",
+              "leftValue": "={{ $json.all_terminal }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "kling-if-0001",
+      "name": "All Terminal?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst res = (sd.results || []).slice().sort((a, b) => a.clip_index - b.clip_index);\nconst urls = res.map(r => r.video_url).filter(Boolean);\nconst errors = res.map(r => r.error).filter(Boolean);\nconst okCount = urls.length;\nlet status = 'failed';\nif (okCount === res.length && res.length > 0) status = 'succeeded';\nelse if (okCount > 0) status = 'partial';\nconst out = {\n  status: status,\n  video_url: urls[0] || null,\n  video_urls: urls,\n  clip_count: res.length,\n  clip_duration_seconds: Number(res[0] ? 10 : 10),\n  approx_total_seconds: okCount * 10,\n  aspect_ratio: '9:16',\n  polls: sd.polls,\n  error: errors.length ? errors.join(' | ') : null,\n  clips: res,\n  finished_at: new Date().toISOString()\n};\nsd.results = [];\nreturn [{ json: out }];"
+      },
+      "id": "kling-out-0001",
+      "name": "Build Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 200]
+    }
+  ],
+  "connections": {
+    "When Called By Main Workflow": { "main": [[{ "node": "Kling Config", "type": "main", "index": 0 }]] },
+    "Kling Config": { "main": [[{ "node": "Build Clip Requests", "type": "main", "index": 0 }]] },
+    "Build Clip Requests": {
+      "main": [
+        [
+          { "node": "Create Kling Task", "type": "main", "index": 0 },
+          { "node": "Merge Create Request+Response", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Create Kling Task": { "main": [[{ "node": "Merge Create Request+Response", "type": "main", "index": 1 }]] },
+    "Merge Create Request+Response": { "main": [[{ "node": "Normalize Create", "type": "main", "index": 0 }]] },
+    "Normalize Create": { "main": [[{ "node": "Wait Before Poll", "type": "main", "index": 0 }]] },
+    "Wait Before Poll": {
+      "main": [
+        [
+          { "node": "Query Kling Task", "type": "main", "index": 0 },
+          { "node": "Merge Query Request+Response", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Query Kling Task": { "main": [[{ "node": "Merge Query Request+Response", "type": "main", "index": 1 }]] },
+    "Merge Query Request+Response": { "main": [[{ "node": "Normalize Status", "type": "main", "index": 0 }]] },
+    "Normalize Status": { "main": [[{ "node": "Check All Terminal", "type": "main", "index": 0 }]] },
+    "Check All Terminal": { "main": [[{ "node": "All Terminal?", "type": "main", "index": 0 }]] },
+    "All Terminal?": {
+      "main": [
+        [{ "node": "Build Output", "type": "main", "index": 0 }],
+        [{ "node": "Wait Before Poll", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Africa/Casablanca" },
+  "staticData": null,
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "brainrot-maroc" }]
+}

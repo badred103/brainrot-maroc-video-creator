@@ -1,0 +1,467 @@
+{
+  "name": "BRM - TikTok OAuth + Upload (sub)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "tiktok/oauth/start",
+        "options": { "responseMode": "responseNode" }
+      },
+      "id": "tt-start-0001",
+      "name": "OAuth Start Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1080, -60],
+      "webhookId": "brm-tiktok-oauth-start"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ '<!doctype html><html><head><meta charset=\"utf-8\"><title>Brainrot Maroc - connect TikTok</title></head><body style=\"font-family:system-ui;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.5\"><h1>Connect your TikTok account</h1><p>Click the button below. TikTok will ask you to log in and to allow the app. Your password is never seen by this tool.</p><p><a href=\"' + $json.authorize_url + '\" style=\"display:inline-block;background:#000;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none\">Authorize with TikTok</a></p><p style=\"color:#666;font-size:13px\">Redirect URI configured: ' + $json.redirect_uri + '</p></body></html>' }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [{ "name": "Content-Type", "value": "text/html; charset=utf-8" }]
+          }
+        }
+      },
+      "id": "tt-start-html-0001",
+      "name": "Show Authorize Link",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-860, -60]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const redirect = $vars.TIKTOK_REDIRECT_URI || 'https://REPLACE_ME/webhook/tiktok/oauth/callback';\nconst scope = $vars.TIKTOK_SCOPES || 'user.info.basic,video.upload';\nconst key = $vars.TIKTOK_CLIENT_KEY || 'REPLACE_ME';\nconst state = Math.random().toString(36).slice(2, 10);\nconst sd = $getWorkflowStaticData('global');\nsd.oauth_state = state;\nconst url = 'https://www.tiktok.com/v2/auth/authorize/?client_key=' + encodeURIComponent(key) + '&scope=' + encodeURIComponent(scope) + '&response_type=code&redirect_uri=' + encodeURIComponent(redirect) + '&state=' + encodeURIComponent(state);\nreturn [{ json: { authorize_url: url, redirect_uri: redirect, scope: scope, state: state } }];"
+      },
+      "id": "tt-start-url-0001",
+      "name": "Build Authorize URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1080, 140]
+    },
+    {
+      "parameters": {
+        "path": "tiktok/oauth/callback",
+        "options": { "responseMode": "responseNode" }
+      },
+      "id": "tt-cb-0001",
+      "name": "OAuth Callback Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1080, 360],
+      "webhookId": "brm-tiktok-oauth-callback"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/oauth/token/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "client_key", "value": "={{ $vars.TIKTOK_CLIENT_KEY }}" },
+            { "name": "client_secret", "value": "={{ $vars.TIKTOK_CLIENT_SECRET }}" },
+            { "name": "code", "value": "={{ $json.query.code }}" },
+            { "name": "grant_type", "value": "authorization_code" },
+            { "name": "redirect_uri", "value": "={{ $vars.TIKTOK_REDIRECT_URI }}" }
+          ]
+        },
+        "options": {
+          "timeout": 60000,
+          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+        }
+      },
+      "id": "tt-exchange-0001",
+      "name": "Exchange Code For Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-860, 360]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst r = $input.first().json;\nif (!r.access_token) {\n  return [{ json: { ok: false, error: 'Token exchange failed: ' + JSON.stringify(r).slice(0, 400) } }];\n}\nsd.tokens = {\n  access_token: r.access_token,\n  refresh_token: r.refresh_token,\n  expires_at: Date.now() + (Number(r.expires_in || 86400) * 1000),\n  refresh_expires_at: Date.now() + (Number(r.refresh_expires_in || 31536000) * 1000),\n  open_id: r.open_id,\n  scope: r.scope\n};\nreturn [{ json: { ok: true, open_id: r.open_id, scope: r.scope, expires_at: new Date(sd.tokens.expires_at).toISOString() } }];"
+      },
+      "id": "tt-save-0001",
+      "name": "Save Tokens",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-640, 360]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ '<!doctype html><html><head><meta charset=\"utf-8\"><title>TikTok connected</title></head><body style=\"font-family:system-ui;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.5\"><h1>' + ($json.ok ? 'TikTok connected' : 'Connection failed') + '</h1><p>' + ($json.ok ? ('Open ID: ' + $json.open_id + '<br>Scopes: ' + $json.scope + '<br>Access token valid until: ' + $json.expires_at) : ('Error: ' + $json.error)) + '</p></body></html>' }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [{ "name": "Content-Type", "value": "text/html; charset=utf-8" }]
+          }
+        }
+      },
+      "id": "tt-cb-html-0001",
+      "name": "Show Callback Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-420, 360]
+    },
+    {
+      "parameters": {},
+      "id": "tt-in-0001",
+      "name": "When Called By Main Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-1080, 640]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst t = sd.tokens || null;\nconst inp = $input.first().json;\nconst now = Date.now();\nconst need = !t || !t.access_token || (t.expires_at - now) < 300000;\nreturn [{ json: {\n  video_url: inp.video_url,\n  caption: inp.caption,\n  hashtags: inp.hashtags,\n  post_mode: (inp.post_mode || 'INBOX').toUpperCase(),\n  privacy_level: inp.privacy_level || 'SELF_ONLY',\n  cover_timestamp_ms: Number(inp.cover_timestamp_ms || 1000),\n  access_token: t ? t.access_token : null,\n  refresh_token: t ? t.refresh_token : null,\n  open_id: t ? t.open_id : null,\n  expires_at: t ? t.expires_at : 0,\n  need_refresh: need,\n  have_refresh_token: !!(t && t.refresh_token)\n} }];"
+      },
+      "id": "tt-load-0001",
+      "name": "Load Token And Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-860, 640]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "tt-need-refresh",
+              "leftValue": "={{ $json.need_refresh }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "tt-if-refresh-0001",
+      "name": "Need Refresh?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-640, 640]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/oauth/token/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "client_key", "value": "={{ $vars.TIKTOK_CLIENT_KEY }}" },
+            { "name": "client_secret", "value": "={{ $vars.TIKTOK_CLIENT_SECRET }}" },
+            { "name": "grant_type", "value": "refresh_token" },
+            { "name": "refresh_token", "value": "={{ $json.refresh_token }}" }
+          ]
+        },
+        "options": {
+          "timeout": 60000,
+          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+        }
+      },
+      "id": "tt-refresh-0001",
+      "name": "Refresh Access Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-420, 780]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst r = $input.first().json;\nconst prev = $('Load Token And Inputs').first().json;\nif (!r.access_token) {\n  return [{ json: Object.assign({}, prev, { fatal: 'Refresh failed: ' + JSON.stringify(r).slice(0, 300), access_token: null }) }];\n}\nsd.tokens = {\n  access_token: r.access_token,\n  refresh_token: r.refresh_token || prev.refresh_token,\n  expires_at: Date.now() + (Number(r.expires_in || 86400) * 1000),\n  refresh_expires_at: Date.now() + (Number(r.refresh_expires_in || 31536000) * 1000),\n  open_id: r.open_id || prev.open_id,\n  scope: r.scope || null\n};\nreturn [{ json: Object.assign({}, prev, { access_token: r.access_token, refreshed: true }) }];"
+      },
+      "id": "tt-save2-0001",
+      "name": "Save Refreshed Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 780]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "tt-merge-tok-0001",
+      "name": "Merge Token",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [-200, 560]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nlet base = null;\nfor (const it of items) {\n  if (!it.json.video_url) continue;\n  if (!base) base = it.json;\n  if (it.json.access_token) base = Object.assign({}, base || {}, it.json);\n}\nif (!base) base = items.map(i => i.json).find(j => j.video_url) || items[0].json;\nif (!base.access_token) {\n  throw new Error('No TikTok access token. Open the OAuth Start webhook URL and connect the account first. ' + (base.fatal || ''));\n}\nconst tags = String(base.hashtags || '').split(/[\\s,]+/).filter(Boolean).map(t => t.startsWith('#') ? t : ('#' + t));\nconst title = (String(base.caption || '').trim() + (tags.length ? (' ' + tags.join(' ')) : '')).trim().slice(0, 2200);\nreturn [{ json: Object.assign({}, base, { tags: tags, title: title }) }];"
+      },
+      "id": "tt-prep-0001",
+      "name": "Prepare Post Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [20, 640]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "tt-mode",
+              "leftValue": "={{ $json.post_mode }}",
+              "rightValue": "INBOX",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "tt-if-mode-0001",
+      "name": "Draft (Inbox) Or Direct Post?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [240, 640]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/inbox/video/init/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json; charset=utf-8" },
+            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source_info: { source: 'PULL_FROM_URL', video_url: $json.video_url } }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+        }
+      },
+      "id": "tt-inbox-0001",
+      "name": "Init Inbox Upload (draft)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/video/init/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json; charset=utf-8" },
+            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post_info: { title: $json.title, privacy_level: $json.privacy_level, disable_comment: false, disable_duet: false, disable_stitch: false, video_cover_timestamp_ms: $json.cover_timestamp_ms }, source_info: { source: 'PULL_FROM_URL', video_url: $json.video_url } }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+        }
+      },
+      "id": "tt-direct-0001",
+      "name": "Init Direct Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 760]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "position",
+        "options": {}
+      },
+      "id": "tt-mergep-0001",
+      "name": "Merge Post Init",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [700, 640]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $input.all().map(it => {\n  const j = it.json;\n  const prev = j;\n  const d = j.data || (j.body && j.body.data) || {};\n  const err = j.error || null;\n  const publishId = d.publish_id || null;\n  return { json: {\n    video_url: prev.video_url, title: prev.title, post_mode: prev.post_mode,\n    privacy_level: prev.privacy_level, access_token: prev.access_token,\n    publish_id: publishId,\n    init_ok: !!publishId,\n    error: publishId ? null : ('TikTok init failed: ' + JSON.stringify(err || j).slice(0, 400))\n  } };\n});"
+      },
+      "id": "tt-normp-0001",
+      "name": "Normalize Post Init",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 640]
+    },
+    {
+      "parameters": {
+        "amount": 20,
+        "unit": "seconds"
+      },
+      "id": "tt-wait-0001",
+      "name": "Wait 20s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1140, 640],
+      "webhookId": "brm-tiktok-status-wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json; charset=utf-8" },
+            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ publish_id: $json.publish_id }) }}",
+        "options": {
+          "timeout": 60000,
+          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+        }
+      },
+      "id": "tt-status-0001",
+      "name": "Fetch Publish Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1360, 640]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "position",
+        "options": {}
+      },
+      "id": "tt-merges-0001",
+      "name": "Merge Status",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1580, 640]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.polls = ($('Fetch Publish Status').all().length ? (sd.polls || 0) : (sd.polls || 0)) ;\nreturn $input.all().map(it => {\n  const j = it.json;\n  const prev = j;\n  const d = j.data || (j.body && j.body.data) || {};\n  const st = d.status || 'UNKNOWN';\n  const terminal = (st === 'PUBLISH_COMPLETE' || st === 'FAILED' || st === 'PUBLISH_FAILED');\n  return { json: {\n    video_url: prev.video_url, title: prev.title, post_mode: prev.post_mode,\n    privacy_level: prev.privacy_level, access_token: prev.access_token,\n    publish_id: prev.publish_id, init_ok: prev.init_ok,\n    tiktok_status: st,\n    terminal: terminal || !prev.init_ok,\n    fail_reason: d.fail_reason || null,\n    error: prev.error || (st === 'FAILED' ? ('TikTok publish failed: ' + (d.fail_reason || st)) : null)\n  } };\n});"
+      },
+      "id": "tt-norms-0001",
+      "name": "Normalize Publish Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1800, 640]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "tt-terminal",
+              "leftValue": "={{ $json.terminal }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "tt-if-term-0001",
+      "name": "Publish Terminal?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2020, 640]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $input.first().json;\nconst mode = j.post_mode;\nlet status = 'unknown';\nlet visibility = 'unknown';\nif (mode === 'INBOX') { status = j.init_ok ? 'draft_sent' : 'failed'; visibility = j.init_ok ? 'draft_in_tiktok_inbox' : 'none'; }\nelse { status = (j.tiktok_status === 'PUBLISH_COMPLETE') ? 'posted' : 'failed'; visibility = j.privacy_level.toLowerCase(); }\nreturn [{ json: {\n  status: status,\n  visibility: visibility,\n  publish_id: j.publish_id,\n  post_mode: mode,\n  tiktok_status: j.tiktok_status || null,\n  video_url: j.video_url,\n  title: j.title,\n  error: j.error || null,\n  fail_reason: j.fail_reason || null,\n  note: mode === 'INBOX' ? 'Video delivered to your TikTok inbox as a DRAFT. Nothing is public. Open TikTok to review and publish manually.' : ('Posted with privacy_level=' + j.privacy_level)\n} }];"
+      },
+      "id": "tt-out-0001",
+      "name": "Build Upload Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 540]
+    }
+  ],
+  "connections": {
+    "OAuth Start Webhook": { "main": [[{ "node": "Build Authorize URL", "type": "main", "index": 0 }]] },
+    "Build Authorize URL": { "main": [[{ "node": "Show Authorize Link", "type": "main", "index": 0 }]] },
+    "OAuth Callback Webhook": { "main": [[{ "node": "Exchange Code For Token", "type": "main", "index": 0 }]] },
+    "Exchange Code For Token": { "main": [[{ "node": "Save Tokens", "type": "main", "index": 0 }]] },
+    "Save Tokens": { "main": [[{ "node": "Show Callback Result", "type": "main", "index": 0 }]] },
+    "When Called By Main Workflow": { "main": [[{ "node": "Load Token And Inputs", "type": "main", "index": 0 }]] },
+    "Load Token And Inputs": { "main": [[{ "node": "Need Refresh?", "type": "main", "index": 0 }]] },
+    "Need Refresh?": {
+      "main": [
+        [{ "node": "Refresh Access Token", "type": "main", "index": 0 }],
+        [{ "node": "Merge Token", "type": "main", "index": 1 }]
+      ]
+    },
+    "Refresh Access Token": { "main": [[{ "node": "Save Refreshed Token", "type": "main", "index": 0 }]] },
+    "Save Refreshed Token": { "main": [[{ "node": "Merge Token", "type": "main", "index": 0 }]] },
+    "Merge Token": { "main": [[{ "node": "Prepare Post Payload", "type": "main", "index": 0 }]] },
+    "Prepare Post Payload": { "main": [[{ "node": "Draft (Inbox) Or Direct Post?", "type": "main", "index": 0 }]] },
+    "Draft (Inbox) Or Direct Post?": {
+      "main": [
+        [{ "node": "Init Inbox Upload (draft)", "type": "main", "index": 0 }],
+        [{ "node": "Init Direct Post", "type": "main", "index": 0 }]
+      ]
+    },
+    "Init Inbox Upload (draft)": { "main": [[{ "node": "Merge Post Init", "type": "main", "index": 1 }]] },
+    "Init Direct Post": { "main": [[{ "node": "Merge Post Init", "type": "main", "index": 1 }]] },
+    "Draft (Inbox) Or Direct Post? ": {},
+    "Prepare Post Payload ": {},
+    "Merge Post Init": { "main": [[{ "node": "Normalize Post Init", "type": "main", "index": 0 }]] },
+    "Normalize Post Init": { "main": [[{ "node": "Wait 20s", "type": "main", "index": 0 }]] },
+    "Wait 20s": {
+      "main": [
+        [
+          { "node": "Fetch Publish Status", "type": "main", "index": 0 },
+          { "node": "Merge Status", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Publish Status": { "main": [[{ "node": "Merge Status", "type": "main", "index": 1 }]] },
+    "Merge Status": { "main": [[{ "node": "Normalize Publish Status", "type": "main", "index": 0 }]] },
+    "Normalize Publish Status": { "main": [[{ "node": "Publish Terminal?", "type": "main", "index": 0 }]] },
+    "Publish Terminal?": {
+      "main": [
+        [{ "node": "Build Upload Output", "type": "main", "index": 0 }],
+        [{ "node": "Wait 20s", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Africa/Casablanca" },
+  "staticData": null,
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "brainrot-maroc" }]
+}
