@@ -7,19 +7,57 @@
       "name": "When Called By Main Workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [-860, 300]
+      "position": [
+        -860,
+        300
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "cfg-1", "name": "model_name", "value": "={{ $json.model_name || 'kling-v1-6' }}", "type": "string" },
-            { "id": "cfg-2", "name": "mode", "value": "={{ $json.mode || 'std' }}", "type": "string" },
-            { "id": "cfg-3", "name": "duration", "value": "={{ String($json.duration || '10') }}", "type": "string" },
-            { "id": "cfg-4", "name": "aspect_ratio", "value": "={{ $json.aspect_ratio || '9:16' }}", "type": "string" },
-            { "id": "cfg-5", "name": "cfg_scale", "value": "={{ Number($json.cfg_scale ?? 0.5) }}", "type": "number" },
-            { "id": "cfg-6", "name": "api_base", "value": "={{ $json.api_base || 'https://api.klingai.com' }}", "type": "string" },
-            { "id": "cfg-7", "name": "max_polls", "value": "={{ Number($json.max_polls || 20) }}", "type": "number" }
+            {
+              "id": "cfg-1",
+              "name": "model_name",
+              "value": "={{ $json.model_name || 'kling-v1-6' }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-2",
+              "name": "mode",
+              "value": "={{ $json.mode || 'std' }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-3",
+              "name": "duration",
+              "value": "={{ String($json.duration || '10') }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-4",
+              "name": "aspect_ratio",
+              "value": "={{ $json.aspect_ratio || '9:16' }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-5",
+              "name": "cfg_scale",
+              "value": "={{ Number($json.cfg_scale ?? 0.5) }}",
+              "type": "number"
+            },
+            {
+              "id": "cfg-6",
+              "name": "api_base",
+              "value": "={{ $json.api_base || 'https://api.klingai.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-7",
+              "name": "max_polls",
+              "value": "={{ Number($json.max_polls || 20) }}",
+              "type": "number"
+            }
           ]
         },
         "options": {}
@@ -28,7 +66,10 @@
       "name": "Kling Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-640, 300]
+      "position": [
+        -640,
+        300
+      ]
     },
     {
       "parameters": {
@@ -39,7 +80,10 @@
       "name": "Build Clip Requests",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-420, 300]
+      "position": [
+        -420,
+        300
+      ]
     },
     {
       "parameters": {
@@ -48,8 +92,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -70,7 +120,10 @@
       "name": "Create Kling Task",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-200, 300],
+      "position": [
+        -200,
+        300
+      ],
       "authentication": "genericCredentialType",
       "genericAuthType": "httpHeaderAuth",
       "credentials": {
@@ -83,14 +136,17 @@
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "position",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "kling-mergec-0001",
       "name": "Merge Create Request+Response",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [20, 300]
+      "position": [
+        20,
+        300
+      ]
     },
     {
       "parameters": {
@@ -101,7 +157,10 @@
       "name": "Normalize Create",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -112,7 +171,10 @@
       "name": "Wait Before Poll",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [460, 300],
+      "position": [
+        460,
+        300
+      ],
       "webhookId": "brm-kling-wait"
     },
     {
@@ -122,7 +184,10 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "options": {
@@ -140,7 +205,10 @@
       "name": "Query Kling Task",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300],
+      "position": [
+        680,
+        300
+      ],
       "authentication": "genericCredentialType",
       "genericAuthType": "httpHeaderAuth",
       "credentials": {
@@ -153,14 +221,17 @@
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "position",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "kling-mergeq-0001",
       "name": "Merge Query Request+Response",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
@@ -171,7 +242,10 @@
       "name": "Normalize Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -182,18 +256,30 @@
       "name": "Check All Terminal",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "if-all-terminal",
               "leftValue": "={{ $json.all_terminal }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -204,7 +290,10 @@
       "name": "All Terminal?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [1560, 300]
+      "position": [
+        1560,
+        300
+      ]
     },
     {
       "parameters": {
@@ -215,45 +304,176 @@
       "name": "Build Output",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1780, 200]
+      "position": [
+        1780,
+        200
+      ]
     }
   ],
   "connections": {
-    "When Called By Main Workflow": { "main": [[{ "node": "Kling Config", "type": "main", "index": 0 }]] },
-    "Kling Config": { "main": [[{ "node": "Build Clip Requests", "type": "main", "index": 0 }]] },
+    "When Called By Main Workflow": {
+      "main": [
+        [
+          {
+            "node": "Kling Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kling Config": {
+      "main": [
+        [
+          {
+            "node": "Build Clip Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Build Clip Requests": {
       "main": [
         [
-          { "node": "Create Kling Task", "type": "main", "index": 0 },
-          { "node": "Merge Create Request+Response", "type": "main", "index": 0 }
+          {
+            "node": "Create Kling Task",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Create Request+Response",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Create Kling Task": { "main": [[{ "node": "Merge Create Request+Response", "type": "main", "index": 1 }]] },
-    "Merge Create Request+Response": { "main": [[{ "node": "Normalize Create", "type": "main", "index": 0 }]] },
-    "Normalize Create": { "main": [[{ "node": "Wait Before Poll", "type": "main", "index": 0 }]] },
+    "Create Kling Task": {
+      "main": [
+        [
+          {
+            "node": "Merge Create Request+Response",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Create Request+Response": {
+      "main": [
+        [
+          {
+            "node": "Normalize Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Create": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Wait Before Poll": {
       "main": [
         [
-          { "node": "Query Kling Task", "type": "main", "index": 0 },
-          { "node": "Merge Query Request+Response", "type": "main", "index": 0 }
+          {
+            "node": "Query Kling Task",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Query Request+Response",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Query Kling Task": { "main": [[{ "node": "Merge Query Request+Response", "type": "main", "index": 1 }]] },
-    "Merge Query Request+Response": { "main": [[{ "node": "Normalize Status", "type": "main", "index": 0 }]] },
-    "Normalize Status": { "main": [[{ "node": "Check All Terminal", "type": "main", "index": 0 }]] },
-    "Check All Terminal": { "main": [[{ "node": "All Terminal?", "type": "main", "index": 0 }]] },
+    "Query Kling Task": {
+      "main": [
+        [
+          {
+            "node": "Merge Query Request+Response",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Query Request+Response": {
+      "main": [
+        [
+          {
+            "node": "Normalize Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Status": {
+      "main": [
+        [
+          {
+            "node": "Check All Terminal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check All Terminal": {
+      "main": [
+        [
+          {
+            "node": "All Terminal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "All Terminal?": {
       "main": [
-        [{ "node": "Build Output", "type": "main", "index": 0 }],
-        [{ "node": "Wait Before Poll", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Build Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Before Poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
-  "settings": { "executionOrder": "v1", "timezone": "Africa/Casablanca" },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Casablanca"
+  },
   "staticData": null,
   "pinData": {},
-  "meta": { "templateCredsSetupCompleted": false },
-  "tags": [{ "name": "brainrot-maroc" }]
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "brainrot-maroc"
+    }
+  ],
+  "id": "bX3ht66hDslaK5QE"
 }

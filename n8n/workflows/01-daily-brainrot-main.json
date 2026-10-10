@@ -5,7 +5,10 @@
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "30 20 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "30 20 * * *"
+            }
           ]
         }
       },
@@ -13,7 +16,10 @@
       "name": "Every Day 20:30 Casablanca",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-1020, 320]
+      "position": [
+        -1020,
+        320
+      ]
     },
     {
       "parameters": {
@@ -24,7 +30,10 @@
       "name": "Run Config",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-800, 320]
+      "position": [
+        -800,
+        320
+      ]
     },
     {
       "parameters": {
@@ -35,7 +44,10 @@
       "name": "Build Gemini Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-580, 320]
+      "position": [
+        -580,
+        320
+      ]
     },
     {
       "parameters": {
@@ -44,8 +56,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -53,14 +71,23 @@
         "jsonBody": "={{ JSON.stringify($json.requestBody) }}",
         "options": {
           "timeout": 120000,
-          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
         }
       },
       "id": "main-gemini-0001",
       "name": "Gemini Generate Concept",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-360, 320],
+      "position": [
+        -360,
+        320
+      ],
       "authentication": "genericCredentialType",
       "genericAuthType": "httpHeaderAuth",
       "credentials": {
@@ -79,18 +106,30 @@
       "name": "Parse And Validate Concept",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-140, 320]
+      "position": [
+        -140,
+        320
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "main-ok",
               "leftValue": "={{ $json.ok }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -101,7 +140,10 @@
       "name": "Concept OK?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [80, 320]
+      "position": [
+        80,
+        320
+      ]
     },
     {
       "parameters": {
@@ -112,7 +154,10 @@
       "name": "Notify Concept Rejected",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [320, 520]
+      "position": [
+        320,
+        520
+      ]
     },
     {
       "parameters": {
@@ -122,7 +167,10 @@
       "name": "Stop - Concept Rejected",
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [540, 520]
+      "position": [
+        540,
+        520
+      ]
     },
     {
       "parameters": {
@@ -133,7 +181,10 @@
       "name": "Remember Concept",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [320, 200]
+      "position": [
+        320,
+        200
+      ]
     },
     {
       "parameters": {
@@ -144,30 +195,48 @@
       "name": "Prepare Kling Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [540, 200]
+      "position": [
+        540,
+        200
+      ]
     },
     {
       "parameters": {
         "source": "database",
-        "workflowId": { "__rl": true, "value": "REPLACE_WITH_KLING_WORKFLOW_ID", "mode": "id" },
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_KLING_WORKFLOW_ID",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "main-kling-0001",
       "name": "Run Kling Text-To-Video",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [760, 200]
+      "position": [
+        760,
+        200
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "main-vidok",
               "leftValue": "={{ $json.video_url }}",
               "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty" }
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
             }
           ],
           "combinator": "and"
@@ -178,7 +247,10 @@
       "name": "Video Ready?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [980, 200]
+      "position": [
+        980,
+        200
+      ]
     },
     {
       "parameters": {
@@ -189,7 +261,10 @@
       "name": "Notify Video Failed",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 420]
+      "position": [
+        1200,
+        420
+      ]
     },
     {
       "parameters": {
@@ -199,18 +274,30 @@
       "name": "Stop - Video Failed",
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [1420, 420]
+      "position": [
+        1420,
+        420
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "main-merge",
               "leftValue": "={{ $('Run Config').first().json.merge_clips }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -221,7 +308,10 @@
       "name": "Merge Clips Locally?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [1200, 120]
+      "position": [
+        1200,
+        120
+      ]
     },
     {
       "parameters": {
@@ -232,7 +322,10 @@
       "name": "Build FFmpeg Command",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1420, 60]
+      "position": [
+        1420,
+        60
+      ]
     },
     {
       "parameters": {
@@ -242,7 +335,10 @@
       "name": "FFmpeg Concat",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [1640, 60]
+      "position": [
+        1640,
+        60
+      ]
     },
     {
       "parameters": {
@@ -253,18 +349,29 @@
       "name": "Build TikTok Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1860, 200]
+      "position": [
+        1860,
+        200
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "main-mode",
               "leftValue": "={{ $json.post_mode }}",
               "rightValue": "INBOX",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
@@ -275,7 +382,10 @@
       "name": "Draft Or Direct Post?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [2080, 200]
+      "position": [
+        2080,
+        200
+      ]
     },
     {
       "parameters": {
@@ -286,7 +396,10 @@
       "name": "Ask Human Confirmation",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2300, 360]
+      "position": [
+        2300,
+        360
+      ]
     },
     {
       "parameters": {
@@ -302,20 +415,30 @@
       "name": "Wait For Approval",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [2520, 360],
+      "position": [
+        2520,
+        360
+      ],
       "webhookId": "brm-approve-post"
     },
     {
       "parameters": {
         "source": "database",
-        "workflowId": { "__rl": true, "value": "REPLACE_WITH_TIKTOK_WORKFLOW_ID", "mode": "id" },
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_TIKTOK_WORKFLOW_ID",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "main-tt-0001",
       "name": "Upload To TikTok",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [2760, 200]
+      "position": [
+        2760,
+        200
+      ]
     },
     {
       "parameters": {
@@ -326,54 +449,277 @@
       "name": "Build Run Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2980, 200]
+      "position": [
+        2980,
+        200
+      ]
     }
   ],
   "connections": {
-    "Every Day 20:30 Casablanca": { "main": [[{ "node": "Run Config", "type": "main", "index": 0 }]] },
-    "Run Config": { "main": [[{ "node": "Build Gemini Request", "type": "main", "index": 0 }]] },
-    "Build Gemini Request": { "main": [[{ "node": "Gemini Generate Concept", "type": "main", "index": 0 }]] },
-    "Gemini Generate Concept": { "main": [[{ "node": "Parse And Validate Concept", "type": "main", "index": 0 }]] },
-    "Parse And Validate Concept": { "main": [[{ "node": "Concept OK?", "type": "main", "index": 0 }]] },
+    "Every Day 20:30 Casablanca": {
+      "main": [
+        [
+          {
+            "node": "Run Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Config": {
+      "main": [
+        [
+          {
+            "node": "Build Gemini Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Gemini Request": {
+      "main": [
+        [
+          {
+            "node": "Gemini Generate Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Generate Concept": {
+      "main": [
+        [
+          {
+            "node": "Parse And Validate Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse And Validate Concept": {
+      "main": [
+        [
+          {
+            "node": "Concept OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Concept OK?": {
       "main": [
-        [{ "node": "Remember Concept", "type": "main", "index": 0 }],
-        [{ "node": "Notify Concept Rejected", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Remember Concept",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Concept Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Notify Concept Rejected": { "main": [[{ "node": "Stop - Concept Rejected", "type": "main", "index": 0 }]] },
-    "Remember Concept": { "main": [[{ "node": "Prepare Kling Input", "type": "main", "index": 0 }]] },
-    "Prepare Kling Input": { "main": [[{ "node": "Run Kling Text-To-Video", "type": "main", "index": 0 }]] },
-    "Run Kling Text-To-Video": { "main": [[{ "node": "Video Ready?", "type": "main", "index": 0 }]] },
+    "Notify Concept Rejected": {
+      "main": [
+        [
+          {
+            "node": "Stop - Concept Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remember Concept": {
+      "main": [
+        [
+          {
+            "node": "Prepare Kling Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Kling Input": {
+      "main": [
+        [
+          {
+            "node": "Run Kling Text-To-Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Kling Text-To-Video": {
+      "main": [
+        [
+          {
+            "node": "Video Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Video Ready?": {
       "main": [
-        [{ "node": "Merge Clips Locally?", "type": "main", "index": 0 }],
-        [{ "node": "Notify Video Failed", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Merge Clips Locally?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Video Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Notify Video Failed": { "main": [[{ "node": "Stop - Video Failed", "type": "main", "index": 0 }]] },
+    "Notify Video Failed": {
+      "main": [
+        [
+          {
+            "node": "Stop - Video Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Merge Clips Locally?": {
       "main": [
-        [{ "node": "Build FFmpeg Command", "type": "main", "index": 0 }],
-        [{ "node": "Build TikTok Payload", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Build FFmpeg Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build TikTok Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Build FFmpeg Command": { "main": [[{ "node": "FFmpeg Concat", "type": "main", "index": 0 }]] },
-    "FFmpeg Concat": { "main": [[{ "node": "Build TikTok Payload", "type": "main", "index": 0 }]] },
-    "Build TikTok Payload": { "main": [[{ "node": "Draft Or Direct Post?", "type": "main", "index": 0 }]] },
+    "Build FFmpeg Command": {
+      "main": [
+        [
+          {
+            "node": "FFmpeg Concat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FFmpeg Concat": {
+      "main": [
+        [
+          {
+            "node": "Build TikTok Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build TikTok Payload": {
+      "main": [
+        [
+          {
+            "node": "Draft Or Direct Post?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Draft Or Direct Post?": {
       "main": [
-        [{ "node": "Upload To TikTok", "type": "main", "index": 0 }],
-        [{ "node": "Ask Human Confirmation", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Upload To TikTok",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask Human Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Ask Human Confirmation": { "main": [[{ "node": "Wait For Approval", "type": "main", "index": 0 }]] },
-    "Wait For Approval": { "main": [[{ "node": "Upload To TikTok", "type": "main", "index": 0 }]] },
-    "Upload To TikTok": { "main": [[{ "node": "Build Run Report", "type": "main", "index": 0 }]] }
+    "Ask Human Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Wait For Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For Approval": {
+      "main": [
+        [
+          {
+            "node": "Upload To TikTok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload To TikTok": {
+      "main": [
+        [
+          {
+            "node": "Build Run Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1", "timezone": "Africa/Casablanca", "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all" },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Casablanca",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
   "staticData": null,
   "pinData": {},
-  "meta": { "templateCredsSetupCompleted": false },
-  "tags": [{ "name": "brainrot-maroc" }]
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "brainrot-maroc"
+    }
+  ],
+  "id": "0TcmOIkig7GWDFx5"
 }

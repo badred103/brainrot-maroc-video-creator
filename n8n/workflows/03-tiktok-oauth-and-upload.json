@@ -4,13 +4,18 @@
     {
       "parameters": {
         "path": "tiktok/oauth/start",
-        "options": { "responseMode": "responseNode" }
+        "options": {
+          "responseMode": "responseNode"
+        }
       },
       "id": "tt-start-0001",
       "name": "OAuth Start Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-1080, -60],
+      "position": [
+        -1080,
+        -60
+      ],
       "webhookId": "brm-tiktok-oauth-start"
     },
     {
@@ -19,7 +24,12 @@
         "responseBody": "={{ '<!doctype html><html><head><meta charset=\"utf-8\"><title>Brainrot Maroc - connect TikTok</title></head><body style=\"font-family:system-ui;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.5\"><h1>Connect your TikTok account</h1><p>Click the button below. TikTok will ask you to log in and to allow the app. Your password is never seen by this tool.</p><p><a href=\"' + $json.authorize_url + '\" style=\"display:inline-block;background:#000;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none\">Authorize with TikTok</a></p><p style=\"color:#666;font-size:13px\">Redirect URI configured: ' + $json.redirect_uri + '</p></body></html>' }}",
         "options": {
           "responseHeaders": {
-            "entries": [{ "name": "Content-Type", "value": "text/html; charset=utf-8" }]
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
           }
         }
       },
@@ -27,7 +37,10 @@
       "name": "Show Authorize Link",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [-860, -60]
+      "position": [
+        -860,
+        -60
+      ]
     },
     {
       "parameters": {
@@ -38,18 +51,26 @@
       "name": "Build Authorize URL",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-1080, 140]
+      "position": [
+        -1080,
+        140
+      ]
     },
     {
       "parameters": {
         "path": "tiktok/oauth/callback",
-        "options": { "responseMode": "responseNode" }
+        "options": {
+          "responseMode": "responseNode"
+        }
       },
       "id": "tt-cb-0001",
       "name": "OAuth Callback Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-1080, 360],
+      "position": [
+        -1080,
+        360
+      ],
       "webhookId": "brm-tiktok-oauth-callback"
     },
     {
@@ -59,31 +80,61 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "form-urlencoded",
         "bodyParameters": {
           "parameters": [
-            { "name": "client_key", "value": "={{ $vars.TIKTOK_CLIENT_KEY }}" },
-            { "name": "client_secret", "value": "={{ $vars.TIKTOK_CLIENT_SECRET }}" },
-            { "name": "code", "value": "={{ $json.query.code }}" },
-            { "name": "grant_type", "value": "authorization_code" },
-            { "name": "redirect_uri", "value": "={{ $vars.TIKTOK_REDIRECT_URI }}" }
+            {
+              "name": "client_key",
+              "value": "={{ $vars.TIKTOK_CLIENT_KEY }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $vars.TIKTOK_CLIENT_SECRET }}"
+            },
+            {
+              "name": "code",
+              "value": "={{ $json.query.code }}"
+            },
+            {
+              "name": "grant_type",
+              "value": "authorization_code"
+            },
+            {
+              "name": "redirect_uri",
+              "value": "={{ $vars.TIKTOK_REDIRECT_URI }}"
+            }
           ]
         },
         "options": {
           "timeout": 60000,
-          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
         }
       },
       "id": "tt-exchange-0001",
       "name": "Exchange Code For Token",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-860, 360]
+      "position": [
+        -860,
+        360
+      ]
     },
     {
       "parameters": {
@@ -94,7 +145,10 @@
       "name": "Save Tokens",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-640, 360]
+      "position": [
+        -640,
+        360
+      ]
     },
     {
       "parameters": {
@@ -102,7 +156,12 @@
         "responseBody": "={{ '<!doctype html><html><head><meta charset=\"utf-8\"><title>TikTok connected</title></head><body style=\"font-family:system-ui;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.5\"><h1>' + ($json.ok ? 'TikTok connected' : 'Connection failed') + '</h1><p>' + ($json.ok ? ('Open ID: ' + $json.open_id + '<br>Scopes: ' + $json.scope + '<br>Access token valid until: ' + $json.expires_at) : ('Error: ' + $json.error)) + '</p></body></html>' }}",
         "options": {
           "responseHeaders": {
-            "entries": [{ "name": "Content-Type", "value": "text/html; charset=utf-8" }]
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
           }
         }
       },
@@ -110,7 +169,10 @@
       "name": "Show Callback Result",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [-420, 360]
+      "position": [
+        -420,
+        360
+      ]
     },
     {
       "parameters": {},
@@ -118,7 +180,10 @@
       "name": "When Called By Main Workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [-1080, 640]
+      "position": [
+        -1080,
+        640
+      ]
     },
     {
       "parameters": {
@@ -129,18 +194,30 @@
       "name": "Load Token And Inputs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-860, 640]
+      "position": [
+        -860,
+        640
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "tt-need-refresh",
               "leftValue": "={{ $json.need_refresh }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -151,7 +228,10 @@
       "name": "Need Refresh?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-640, 640]
+      "position": [
+        -640,
+        640
+      ]
     },
     {
       "parameters": {
@@ -160,30 +240,57 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "form-urlencoded",
         "bodyParameters": {
           "parameters": [
-            { "name": "client_key", "value": "={{ $vars.TIKTOK_CLIENT_KEY }}" },
-            { "name": "client_secret", "value": "={{ $vars.TIKTOK_CLIENT_SECRET }}" },
-            { "name": "grant_type", "value": "refresh_token" },
-            { "name": "refresh_token", "value": "={{ $json.refresh_token }}" }
+            {
+              "name": "client_key",
+              "value": "={{ $vars.TIKTOK_CLIENT_KEY }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $vars.TIKTOK_CLIENT_SECRET }}"
+            },
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.refresh_token }}"
+            }
           ]
         },
         "options": {
           "timeout": 60000,
-          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
         }
       },
       "id": "tt-refresh-0001",
       "name": "Refresh Access Token",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-420, 780]
+      "position": [
+        -420,
+        780
+      ]
     },
     {
       "parameters": {
@@ -194,19 +301,10 @@
       "name": "Save Refreshed Token",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-200, 780]
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "id": "tt-merge-tok-0001",
-      "name": "Merge Token",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [-200, 560]
+      "position": [
+        -200,
+        780
+      ]
     },
     {
       "parameters": {
@@ -217,18 +315,29 @@
       "name": "Prepare Post Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [20, 640]
+      "position": [
+        20,
+        640
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "tt-mode",
               "leftValue": "={{ $json.post_mode }}",
               "rightValue": "INBOX",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
@@ -239,7 +348,10 @@
       "name": "Draft (Inbox) Or Direct Post?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [240, 640]
+      "position": [
+        240,
+        640
+      ]
     },
     {
       "parameters": {
@@ -248,9 +360,18 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json; charset=utf-8" },
-            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -258,14 +379,23 @@
         "jsonBody": "={{ JSON.stringify({ source_info: { source: 'PULL_FROM_URL', video_url: $json.video_url } }) }}",
         "options": {
           "timeout": 120000,
-          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
         }
       },
       "id": "tt-inbox-0001",
       "name": "Init Inbox Upload (draft)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [480, 520]
+      "position": [
+        480,
+        520
+      ]
     },
     {
       "parameters": {
@@ -274,9 +404,18 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json; charset=utf-8" },
-            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -284,26 +423,38 @@
         "jsonBody": "={{ JSON.stringify({ post_info: { title: $json.title, privacy_level: $json.privacy_level, disable_comment: false, disable_duet: false, disable_stitch: false, video_cover_timestamp_ms: $json.cover_timestamp_ms }, source_info: { source: 'PULL_FROM_URL', video_url: $json.video_url } }) }}",
         "options": {
           "timeout": 120000,
-          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
         }
       },
       "id": "tt-direct-0001",
       "name": "Init Direct Post",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [480, 760]
+      "position": [
+        480,
+        760
+      ]
     },
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "position",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "tt-mergep-0001",
       "name": "Merge Post Init",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [700, 640]
+      "position": [
+        700,
+        640
+      ]
     },
     {
       "parameters": {
@@ -314,7 +465,10 @@
       "name": "Normalize Post Init",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [920, 640]
+      "position": [
+        920,
+        640
+      ]
     },
     {
       "parameters": {
@@ -325,7 +479,10 @@
       "name": "Wait 20s",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [1140, 640],
+      "position": [
+        1140,
+        640
+      ],
       "webhookId": "brm-tiktok-status-wait"
     },
     {
@@ -335,9 +492,18 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json; charset=utf-8" },
-            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -345,26 +511,38 @@
         "jsonBody": "={{ JSON.stringify({ publish_id: $json.publish_id }) }}",
         "options": {
           "timeout": 60000,
-          "response": { "response": { "neverError": true, "fullResponse": false, "outputFormat": "json" } }
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": false,
+              "outputFormat": "json"
+            }
+          }
         }
       },
       "id": "tt-status-0001",
       "name": "Fetch Publish Status",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1360, 640]
+      "position": [
+        1360,
+        640
+      ]
     },
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "position",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "tt-merges-0001",
       "name": "Merge Status",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [1580, 640]
+      "position": [
+        1580,
+        640
+      ]
     },
     {
       "parameters": {
@@ -375,18 +553,30 @@
       "name": "Normalize Publish Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1800, 640]
+      "position": [
+        1800,
+        640
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "tt-terminal",
               "leftValue": "={{ $json.terminal }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -397,7 +587,10 @@
       "name": "Publish Terminal?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [2020, 640]
+      "position": [
+        2020,
+        640
+      ]
     },
     {
       "parameters": {
@@ -408,60 +601,289 @@
       "name": "Build Upload Output",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2240, 540]
+      "position": [
+        2240,
+        540
+      ]
     }
   ],
   "connections": {
-    "OAuth Start Webhook": { "main": [[{ "node": "Build Authorize URL", "type": "main", "index": 0 }]] },
-    "Build Authorize URL": { "main": [[{ "node": "Show Authorize Link", "type": "main", "index": 0 }]] },
-    "OAuth Callback Webhook": { "main": [[{ "node": "Exchange Code For Token", "type": "main", "index": 0 }]] },
-    "Exchange Code For Token": { "main": [[{ "node": "Save Tokens", "type": "main", "index": 0 }]] },
-    "Save Tokens": { "main": [[{ "node": "Show Callback Result", "type": "main", "index": 0 }]] },
-    "When Called By Main Workflow": { "main": [[{ "node": "Load Token And Inputs", "type": "main", "index": 0 }]] },
-    "Load Token And Inputs": { "main": [[{ "node": "Need Refresh?", "type": "main", "index": 0 }]] },
-    "Need Refresh?": {
-      "main": [
-        [{ "node": "Refresh Access Token", "type": "main", "index": 0 }],
-        [{ "node": "Merge Token", "type": "main", "index": 1 }]
-      ]
-    },
-    "Refresh Access Token": { "main": [[{ "node": "Save Refreshed Token", "type": "main", "index": 0 }]] },
-    "Save Refreshed Token": { "main": [[{ "node": "Merge Token", "type": "main", "index": 0 }]] },
-    "Merge Token": { "main": [[{ "node": "Prepare Post Payload", "type": "main", "index": 0 }]] },
-    "Prepare Post Payload": { "main": [[{ "node": "Draft (Inbox) Or Direct Post?", "type": "main", "index": 0 }]] },
-    "Draft (Inbox) Or Direct Post?": {
-      "main": [
-        [{ "node": "Init Inbox Upload (draft)", "type": "main", "index": 0 }],
-        [{ "node": "Init Direct Post", "type": "main", "index": 0 }]
-      ]
-    },
-    "Init Inbox Upload (draft)": { "main": [[{ "node": "Merge Post Init", "type": "main", "index": 1 }]] },
-    "Init Direct Post": { "main": [[{ "node": "Merge Post Init", "type": "main", "index": 1 }]] },
-    "Draft (Inbox) Or Direct Post? ": {},
-    "Prepare Post Payload ": {},
-    "Merge Post Init": { "main": [[{ "node": "Normalize Post Init", "type": "main", "index": 0 }]] },
-    "Normalize Post Init": { "main": [[{ "node": "Wait 20s", "type": "main", "index": 0 }]] },
-    "Wait 20s": {
+    "OAuth Start Webhook": {
       "main": [
         [
-          { "node": "Fetch Publish Status", "type": "main", "index": 0 },
-          { "node": "Merge Status", "type": "main", "index": 0 }
+          {
+            "node": "Build Authorize URL",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Fetch Publish Status": { "main": [[{ "node": "Merge Status", "type": "main", "index": 1 }]] },
-    "Merge Status": { "main": [[{ "node": "Normalize Publish Status", "type": "main", "index": 0 }]] },
-    "Normalize Publish Status": { "main": [[{ "node": "Publish Terminal?", "type": "main", "index": 0 }]] },
+    "Build Authorize URL": {
+      "main": [
+        [
+          {
+            "node": "Show Authorize Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OAuth Callback Webhook": {
+      "main": [
+        [
+          {
+            "node": "Exchange Code For Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exchange Code For Token": {
+      "main": [
+        [
+          {
+            "node": "Save Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Tokens": {
+      "main": [
+        [
+          {
+            "node": "Show Callback Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Called By Main Workflow": {
+      "main": [
+        [
+          {
+            "node": "Load Token And Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Token And Inputs": {
+      "main": [
+        [
+          {
+            "node": "Need Refresh?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Need Refresh?": {
+      "main": [
+        [
+          {
+            "node": "Refresh Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Post Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refresh Access Token": {
+      "main": [
+        [
+          {
+            "node": "Save Refreshed Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Refreshed Token": {
+      "main": [
+        [
+          {
+            "node": "Prepare Post Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Post Payload": {
+      "main": [
+        [
+          {
+            "node": "Draft (Inbox) Or Direct Post?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Post Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft (Inbox) Or Direct Post?": {
+      "main": [
+        [
+          {
+            "node": "Init Inbox Upload (draft)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Init Direct Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Inbox Upload (draft)": {
+      "main": [
+        [
+          {
+            "node": "Merge Post Init",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Init Direct Post": {
+      "main": [
+        [
+          {
+            "node": "Merge Post Init",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Post Init": {
+      "main": [
+        [
+          {
+            "node": "Normalize Post Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Post Init": {
+      "main": [
+        [
+          {
+            "node": "Wait 20s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20s": {
+      "main": [
+        [
+          {
+            "node": "Fetch Publish Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Publish Status": {
+      "main": [
+        [
+          {
+            "node": "Merge Status",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Status": {
+      "main": [
+        [
+          {
+            "node": "Normalize Publish Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Publish Status": {
+      "main": [
+        [
+          {
+            "node": "Publish Terminal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Publish Terminal?": {
       "main": [
-        [{ "node": "Build Upload Output", "type": "main", "index": 0 }],
-        [{ "node": "Wait 20s", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Build Upload Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 20s",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
-  "settings": { "executionOrder": "v1", "timezone": "Africa/Casablanca" },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Casablanca"
+  },
   "staticData": null,
   "pinData": {},
-  "meta": { "templateCredsSetupCompleted": false },
-  "tags": [{ "name": "brainrot-maroc" }]
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "brainrot-maroc"
+    }
+  ],
+  "id": "IbRjP8htA3r0MmJT"
 }
