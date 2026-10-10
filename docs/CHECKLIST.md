@@ -75,6 +75,8 @@ See `docs/TIKTOK-APP.md` for the exact values.
 - [x] **Live API test run** - key authenticates, auth prefix `Bearer` confirmed
 - [x] **Default model corrected**: `kling-v1-6` is discontinued; now
       `kling-v2-5-turbo` (in workflows, `.env`, `.env.example`, docs)
+- [x] **Pipeline logic validated** - mock Kling server test: 3 clips created,
+      polled, URLs collected, 30s total, zero errors (6/6 assertions PASS)
 - [ ] **You must do: top up your Kling credits.** `kling-v2-5-turbo` and
       `kling-v3` both return `1102 Account balance not enough`, so no video has
       been rendered yet.

@@ -20,6 +20,7 @@ Tags: `[measured]` = produced by running something just now;
 | GitHub Pages reachable | HTTP GET on the three URLs | 200 OK `[measured]` |
 | Live Gemini call | `scripts/smoke-test.mjs` | **not run** - no API key `[not-tested]` |
 | **Live Kling generation** | `scripts/kling-real-test.mjs` against the real API | **key valid, generation blocked: account balance 0** `[measured]` |
+| **Pipeline logic** | `scripts/pipeline-integration-test.mjs` with a mock Kling server | **all 6 assertions PASS** `[measured]` |
 | Real TikTok upload | requires OAuth | **not run** - blocked `[not-tested]` |
 
 ## Live Kling test, measured
